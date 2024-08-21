@@ -300,3 +300,54 @@ function unstakeMunchable(uint256 tokenId) external override forceFarmPlots(msg.
 ## Mitigation
 
 Remove `notPaused` modifier and allow users to withdraw their NFTs.
+
+
+
+
+
+
+# Missed Findings 
+
+## H-02: Invalid validation in `_farmPlots` function allowing a malicious user repeated farming without locked funds
+
+```solidity
+if (_getNumPlots(landlord) < _toiler.plotId) { timestamp = plotMetadata[landlord].lastUpdated; toilerState[tokenId].dirty = true; }
+```
+
+Lesson Learned: Always verify if the comparison is correct (edge cases, correct sign used, < instead of <=)
+
+
+## H-03: Miscalculation in `_farmPlots` function could lead to a user unable to unstake all NFTs
+
+```solidity
+finalBonus =
+                int16(
+                    REALM_BONUSES[
+                        (uint256(immutableAttributes.realm) * 5) +
+                            uint256(landlordMetadata.snuggeryRealm)
+                    ]
+                ) +
+                int16(
+                    int8(RARITY_BONUSES[uint256(immutableAttributes.rarity)])
+                );
+```
+
+```solidity
+schnibblesTotal = uint256(
+                (int256(schnibblesTotal) +
+                    (int256(schnibblesTotal) * finalBonus)) / 100
+            );
+```
+
+Lesson Learned: int to uint conversion can lead to overflow, verify that it is not possible
+
+
+
+## H-05 Failure to update dirty flag in `transferToUnoccupiedPlot` prevents reward accumulation on valid plot
+
+Basic workflow state machine checks should have been enough here.
+
+
+## M-01 Users can farm on zero-tax land if the landlord locked tokens before the LandManager deployment
+
+Verifiy that users cannot do harm after contract is deployed but not initialized
